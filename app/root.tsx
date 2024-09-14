@@ -11,9 +11,9 @@ import { ReactNode } from "react";
 import Navbar from "./components/navbar";
 
 const Wrapper = (props: { children: ReactNode }) => (
-  <div className="min-h-screen flex flex-col">
+  <div className="min-h-screen flex flex-col items-center">
     <Navbar />
-    <main className="w-full max-w-7xl mx-auto flex-1 flex">
+    <main className="w-full max-w-7xl flex-1 flex justify-center">
       {props.children}
     </main>
     <footer className="w-full max-w-7xl mx-auto p-10 flex justify-center">
