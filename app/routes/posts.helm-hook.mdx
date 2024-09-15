@@ -1,0 +1,59 @@
+---
+title: "Helm - 3. - Advanced Helm Hooks"
+description: "A deep dive into Helm hooks and how they can be used to customize your Helm chart lifecycle."
+published: 2024-09-16
+---
+
+# Helm Hooks Explained
+
+Helm hooks are a powerful feature that allows you to execute actions at different points in the lifecycle of your Helm chart. Hooks can be used for pre-install tasks, post-upgrade actions, and even cleanup after a release has been deleted.
+
+## Types of Hooks
+
+Here are some common hook points in Helm:
+
+- **pre-install**: Before resources are installed.
+- **post-install**: After resources are installed.
+- **pre-upgrade**: Before a resource is upgraded.
+- **post-upgrade**: After a resource is upgraded.
+- **pre-delete**: Before a resource is deleted.
+- **post-delete**: After a resource is deleted.
+
+## Hook Annotations
+
+Helm hooks are defined by adding annotations to your Kubernetes manifests. The `helm.sh/hook` annotation tells Helm when to run the resource.
+
+## Example: Running a Pre-install Job
+
+Below is an example of how to define a `pre-install` hook. This job will run before the Helm chart resources are installed.
+
+```yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "{{ .Release.Name }}-pre-install-job"
+  annotations:
+    "helm.sh/hook": pre-install
+spec:
+  template:
+    spec:
+      containers:
+        - name: pre-install
+          image: busybox
+          command: ["sh", "-c", "echo Pre-install job running!"]
+      restartPolicy: Never
+```
+
+### Explanation:
+
+- **`helm.sh/hook: pre-install`**: This annotation tells Helm that this job should run before the chart resources are installed.
+- **`.Release.Name`**: This dynamically sets the job name based on the release name.
+- **Command**: The job runs a simple shell command (`echo`) for demonstration purposes.
+
+## Common Use Cases for Hooks
+
+- **Database Migrations**: Run a migration before upgrading an application.
+- **Backup Jobs**: Trigger a backup before a deletion.
+- **Cleanup Jobs**: Run a cleanup job after a release is deleted.
+
+Helm hooks allow for more flexibility in deploying applications and managing their lifecycle. Be mindful that hooks are separate from the main resources managed by Helm, so they won't automatically be rolled back if a deployment fails.
