@@ -10,7 +10,7 @@ export default function Component() {
   const posts = useLoaderData<typeof loader>();
 
   return (
-    <div className="p-10">        
+    <div>        
       <ul className="space-y-8">
         {posts.map((post) => (
           <li key={post.slug}>

@@ -1,0 +1,271 @@
+---
+title: "Helm - 2. - Creating a Custom Helm Chart from Scratch"
+published: "2024-09-15"
+tags: ["Kubernetes", "Helm", "DevOps", "Custom Helm Chart"]
+description: "This guide will walk you through creating a custom Helm chart from scratch, including chart structure, customization, and deployment in a Kubernetes cluster. Learn how to build your own Helm chart and manage reusable Kubernetes configurations."
+---
+
+## Introduction
+
+Helm is a **package manager** for Kubernetes that helps you manage and deploy applications using **charts**—collections of templates that define Kubernetes resources. While Helm provides a vast library of pre-built charts, there are times when you need to create a custom chart to suit your specific application needs.
+
+In this guide, we’ll walk through the process of **creating a custom Helm chart** from scratch. You’ll learn how to:
+
+- Set up the chart structure
+- Define your Kubernetes resources
+- Customize the chart using `values.yaml`
+- Deploy the chart to your Kubernetes cluster
+
+---
+
+## Prerequisites
+
+Before you start, you should have:
+
+- A Kubernetes cluster up and running
+- Helm installed on your local machine
+- kubectl configured to access your cluster
+
+---
+
+## Step 1: Create a New Helm Chart
+
+Start by creating a new Helm chart using the `helm create` command:
+
+```bash
+helm create my-custom-chart
+```
+
+This command will generate a directory structure for the chart:
+
+```bash
+my-custom-chart/
+├── Chart.yaml
+├── values.yaml
+├── charts/
+├── templates/
+│   ├── deployment.yaml
+│   ├── _helpers.tpl
+│   ├── hpa.yaml
+│   ├── ingress.yaml
+│   ├── service.yaml
+│   ├── serviceaccount.yaml
+│   └── tests/
+└── .helmignore
+```
+
+### Key Files and Directories:
+
+- **`Chart.yaml`**: Metadata about the chart, such as its name and version.
+- **`values.yaml`**: Default values for your chart, which can be customized during deployment.
+- **`templates/`**: Contains Kubernetes resource templates that Helm will render.
+- **`_helpers.tpl`**: A helper template for reusable code (like label formatting).
+
+---
+
+## Step 2: Customize the Chart
+
+Let’s customize this chart to suit a simple Node.js web application deployment.
+
+### Editing `Chart.yaml`
+
+First, edit the `Chart.yaml` file to reflect your application’s metadata:
+
+```yaml
+name: my-custom-chart
+version: 0.1.0
+description: A Helm chart for deploying a custom Node.js application
+maintainers:
+  - name: Your Name
+    email: your.email@example.com
+```
+
+### Editing `values.yaml`
+
+In the `values.yaml` file, we define the default values that can be overridden during deployment. Here's an example configuration:
+
+```yaml
+# Application name and image
+app:
+  name: my-node-app
+  image:
+    repository: node
+    tag: 16-alpine
+    pullPolicy: IfNotPresent
+
+# Service configuration
+service:
+  type: ClusterIP
+  port: 80
+
+# Resources
+resources:
+  requests:
+    memory: "64Mi"
+    cpu: "100m"
+  limits:
+    memory: "128Mi"
+    cpu: "200m"
+
+# Replicas
+replicaCount: 2
+```
+
+In this example:
+
+- We define the application’s Docker image (`node:16-alpine`).
+- The service type is set to `ClusterIP`, exposing port `80`.
+- Resource requests and limits are defined to manage pod resource consumption.
+- The default number of replicas is set to `2`.
+
+---
+
+## Step 3: Customize the Deployment Template
+
+Next, we’ll modify the `deployment.yaml` template to suit our Node.js application. This is where Kubernetes manifests are defined using Helm template syntax.
+
+Open `templates/deployment.yaml` and edit it as follows:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: { { include "my-custom-chart.fullname" . } }
+  labels:
+    app: { { include "my-custom-chart.name" . } }
+spec:
+  replicas: { { .Values.replicaCount } }
+  selector:
+    matchLabels:
+      app: { { include "my-custom-chart.name" . } }
+  template:
+    metadata:
+      labels:
+        app: { { include "my-custom-chart.name" . } }
+    spec:
+      containers:
+        - name: { { .Values.app.name } }
+          image: "{{ .Values.app.image.repository }}:{{ .Values.app.image.tag }}"
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              memory: { { .Values.resources.requests.memory } }
+              cpu: { { .Values.resources.requests.cpu } }
+            limits:
+              memory: { { .Values.resources.limits.memory } }
+              cpu: { { .Values.resources.limits.cpu } }
+```
+
+### Key Points:
+
+- `{{ .Values }}` references the values defined in `values.yaml`.
+- `{{ include }}` is used to call helper functions defined in `_helpers.tpl`.
+- The container’s image, resources, and replicas are all pulled from `values.yaml`.
+
+---
+
+## Step 4: Customize the Service Template
+
+Next, open `templates/service.yaml` and edit the file to define how the application will be exposed.
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: { { include "my-custom-chart.fullname" . } }
+  labels:
+    app: { { include "my-custom-chart.name" . } }
+spec:
+  type: { { .Values.service.type } }
+  ports:
+    - port: { { .Values.service.port } }
+      targetPort: 80
+  selector:
+    app: { { include "my-custom-chart.name" . } }
+```
+
+Here, the service type and port are pulled from `values.yaml`.
+
+---
+
+## Step 5: Test the Chart Locally
+
+Before deploying to your cluster, you can test the chart rendering using the following command:
+
+```bash
+helm template my-custom-release ./my-custom-chart
+```
+
+This will output the Kubernetes manifests as they would be rendered, without actually deploying them.
+
+---
+
+## Step 6: Deploy the Chart to Kubernetes
+
+Now that your custom chart is ready, you can deploy it to your Kubernetes cluster.
+
+To install the chart:
+
+```bash
+helm install my-custom-release ./my-custom-chart --namespace my-namespace
+```
+
+This will create a Helm release named `my-custom-release` in the `my-namespace` namespace.
+
+To see the status of the release:
+
+```bash
+helm status my-custom-release --namespace my-namespace
+```
+
+---
+
+## Step 7: Update the Chart
+
+If you need to change values or update the chart, you can modify `values.yaml` or pass in new values via the `--set` flag.
+
+For example, to increase the number of replicas:
+
+```bash
+helm upgrade my-custom-release ./my-custom-chart --set replicaCount=4 --namespace my-namespace
+```
+
+---
+
+## Step 8: Roll Back Changes
+
+If something goes wrong with the deployment, you can easily roll back to a previous version of the release:
+
+```bash
+helm rollback my-custom-release 1 --namespace my-namespace
+```
+
+This command reverts the release to revision `1`.
+
+---
+
+## Conclusion
+
+Creating a custom Helm chart allows you to package your Kubernetes applications in a reusable and flexible way. By leveraging templates and configuration files like `values.yaml`, you can easily manage complex applications and scale them across environments.
+
+With this guide, you should now be able to:
+
+- Structure and customize your Helm chart
+- Define Kubernetes resources as templates
+- Deploy and manage your application using Helm
+
+Helm's flexibility and power make it an essential tool in modern Kubernetes-based environments. Happy charting!
+
+### Breakdown of the Content:
+
+- **Introduction**: What is Helm, and why you might need a custom chart.
+- **Step-by-Step Guide**:
+  - Create the chart using `helm create`.
+  - Modify `Chart.yaml` and `values.yaml` to customize metadata and default values.
+  - Customize `deployment.yaml` and `service.yaml` for your specific use case.
+  - Test the chart locally with `helm template`.
+  - Deploy the chart using `helm install`.
+  - Update and upgrade the chart with new values.
+  - Roll back changes if something goes wrong.
+- **Conclusion**: A summary of the power of Helm and what you learned.
