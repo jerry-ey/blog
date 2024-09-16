@@ -1,0 +1,198 @@
+---
+title: "Helm - 4. - Understanding Helm Templates: Exploring Helm Objects like NOTES.txt, Values, Release, and More"
+description: "A deep dive into Helm objects, exploring how to use Helm's built-in templates, including NOTES.txt, Release, Values, Capabilities, and Template to create more dynamic Kubernetes charts."
+published: 2024-09-17
+---
+
+When working with Helm, you’ll quickly discover that Helm provides a rich set of built-in objects and templates that allow you to create highly customizable Kubernetes charts. Two of the key components in Helm charts are the `NOTES.txt` template and Helm objects like `Release`, `Values`, `Capabilities`, and `Template`, which are used to dynamically generate outputs and manage releases.
+
+In this post, we will cover:
+
+- What the `NOTES.txt` file is and how to use it
+- Understanding key Helm objects like `Release`, `Values`, `Capabilities`, and `Template`
+- How to incorporate these objects in your custom Helm charts
+- How to perform a dry-run of your Helm chart using the `helm template` and `helm install` commands
+
+### What is `NOTES.txt`?
+
+The `NOTES.txt` file in Helm is a special template that outputs instructions or information when your chart is installed. It typically contains useful information for the user after the chart is deployed. For example, it can include next steps or tips on how to access your application.
+
+This template is executed as part of the `helm install` and `helm upgrade` processes, and the output is displayed to the user in the terminal. Here’s an example:
+
+```txt
+NOTES:
+Your Helm chart has been successfully deployed!
+To access your application, run the following command:
+
+kubectl get pods --namespace {{ .Release.Namespace }} -l "app.kubernetes.io/name={{ .Chart.Name }}"
+
+Your application will be accessible at http://{{ .Release.Name }}.svc.cluster.local
+```
+
+### Key Helm Objects
+
+Helm provides a number of built-in objects that you can use in your templates. These objects contain useful information about the chart, the release, and the values provided by the user.
+
+#### `Release`
+
+The `Release` object provides information about the current release of your Helm chart. You can use it to reference data such as the release name, namespace, revision number, and more.
+
+```yaml
+{{ .Release.Name }}  # The name of the release
+{{ .Release.Namespace }}  # The namespace the chart is deployed in
+{{ .Release.Revision }}  # The revision number of the release
+{{ .Release.Service }}  # The service used by Helm to deploy this chart (e.g., Tiller or Helm)
+```
+
+For example, if you want to include the release name in your Kubernetes resources, you could use:
+
+```yaml
+metadata:
+  name: {{ .Release.Name }}-{{ .Chart.Name }}
+```
+
+This would create a Kubernetes resource name using the release name and the chart name, ensuring uniqueness for each release.
+
+#### `Values`
+
+The `Values` object contains the values provided by the user during the chart installation or upgrade. You can use it to customize your resources based on user inputs.
+
+```yaml
+spec:
+  replicas: {{ .Values.replicaCount }}
+  image:
+    repository: {{ .Values.image.repository }}
+    tag: {{ .Values.image.tag }}
+```
+
+In this example, the number of replicas and the image repository and tag are pulled from the user-provided values in `values.yaml`.
+
+The `Values` object is a critical part of making your Helm charts dynamic and reusable. By default, these values are loaded from the `values.yaml` file, but they can also be overridden during chart installation using the `--set` flag or a custom values file.
+
+```bash
+helm install my-chart ./my-chart --set image.tag=v1.0.0
+```
+
+#### `Capabilities`
+
+The `Capabilities` object provides information about the Kubernetes cluster’s capabilities, such as the available API versions and whether certain features (like the `Ingress` API) are available.
+
+You can use `Capabilities` to write templates that adapt based on the features available in the target cluster:
+
+```yaml
+{{- if .Capabilities.APIVersions.Has "networking.k8s.io/v1/Ingress" }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+{{- else }}
+apiVersion: extensions/v1beta1
+kind: Ingress
+{{- end }}
+```
+
+This ensures that your chart works across different Kubernetes versions by selecting the correct API version based on what’s available in the cluster.
+
+#### `Template`
+
+The `Template` object is an advanced feature in Helm, allowing you to reuse template logic across your chart. You can define reusable blocks of code in a special file called `_helpers.tpl` and include them in your Kubernetes resource templates.
+
+For example, you can define a helper for generating a fully qualified name for your resources:
+
+```yaml
+# _helpers.tpl
+{{- define "my-app.fullname" -}}
+{{ .Release.Name }}-{{ .Chart.Name }}
+{{- end -}}
+```
+
+And then use it in your deployment template:
+
+```yaml
+metadata:
+  name: {{ include "my-app.fullname" . }}
+```
+
+By using the `Template` object, you can reduce repetition and keep your chart more organized and maintainable.
+
+### Dry-Running Helm Charts
+
+Before deploying a Helm chart, it’s a good idea to test it using a dry run. This allows you to preview the resources that will be generated without actually deploying them to the cluster.
+
+There are two main ways to perform a dry-run with Helm:
+
+1. **Using `helm template`** – This command renders the templates locally without interacting with the Kubernetes cluster.
+
+```bash
+helm template my-chart ./my-chart
+```
+
+2. **Using `helm install --dry-run`** – This command simulates the installation process without actually installing anything. It connects to the Kubernetes cluster but doesn’t create any resources.
+
+```bash
+helm install my-release ./my-chart --dry-run
+```
+
+These commands output the rendered YAML files to the terminal, allowing you to review them and make sure everything looks correct before you deploy.
+
+### Creating a Custom Helm Chart with Helm Objects
+
+Let’s walk through creating a custom Helm chart that makes use of some of these built-in objects, including the `NOTES.txt` template.
+
+#### Step 1: Create a `NOTES.txt` Template
+
+First, create a `templates/NOTES.txt` file in your Helm chart. This file will provide information to the user after the chart is installed.
+
+```txt
+NOTES:
+Your application {{ .Release.Name }} has been deployed in the {{ .Release.Namespace }} namespace.
+
+You can access your application using the following command:
+
+kubectl get pods --namespace {{ .Release.Namespace }} -l "app.kubernetes.io/name={{ .Chart.Name }}"
+```
+
+#### Step 2: Use `Release`, `Values`, and `Capabilities` in Your Kubernetes Resources
+
+In your Kubernetes resource templates (like `templates/deployment.yaml`), you can use the `Release`, `Values`, and `Capabilities` objects to create unique and informative resource names and adapt to cluster capabilities:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-{{ .Chart.Name }}
+  labels:
+    app: {{ .Release.Name }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+spec:
+  replicas: {{ .Values.replicaCount }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          ports:
+            - containerPort: 8080
+```
+
+Here, we use `Release.Name` to ensure the deployment name is unique to each release and `Chart.Name` and `Chart.Version` to label the resources with chart metadata. The number of replicas and image are customizable via the `Values` object.
+
+#### Step 3: Customize the Helm Values
+
+In your `values.yaml` file, you can provide default values for your chart, which users can override when they install or upgrade the chart.
+
+```yaml
+replicaCount: 2
+image:
+  repository: my-app
+  tag: latest
+```
+
+This makes your chart reusable and flexible.
+
+### Conclusion
+
+Understanding Helm’s built-in objects like `NOTES.txt`, `Release`, `Values`, `Capabilities`, and `Template` can greatly enhance your ability to create dynamic and reusable Helm charts. These objects provide a powerful way to make your Kubernetes resources unique to each release while keeping your chart configurations flexible.
+
+Next time you write a Helm chart, take full advantage of these objects to generate dynamic configurations and improve user experience with detailed release notes, adaptability, and flexibility.
