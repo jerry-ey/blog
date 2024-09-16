@@ -7,13 +7,29 @@ import mdx from "@mdx-js/rollup";
 import remarkFrontmatter from "remark-frontmatter";
 import remarkMdxFrontmatter from "remark-mdx-frontmatter";
 import rehypePrettyCode from "rehype-pretty-code";
+import rehypePrism from "rehype-prism";
 
 export default defineConfig({
   plugins: [
     tsconfigPaths(),
     mdx({
       remarkPlugins: [remarkFrontmatter, remarkMdxFrontmatter],
-      rehypePlugins: [rehypePrettyCode],
+      rehypePlugins: [
+        rehypePrism, // Add syntax highlighting
+        [
+          rehypePrettyCode,
+          {
+            theme: "one-dark-pro",
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            onVisitLine(node: any) {
+              // Handle empty lines to avoid visual collapse
+              if (node.children.length === 0) {
+                node.children = [{ type: "text", value: " " }];
+              }
+            },           
+          },
+        ],
+      ],
     }),
     remix({
       future: {
@@ -21,6 +37,6 @@ export default defineConfig({
         v3_relativeSplatPath: true,
         v3_throwAbortReason: true,
       },
-    }),    
+    }),
   ],
 });

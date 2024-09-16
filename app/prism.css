@@ -1,0 +1,51 @@
+pre > code {
+  display: grid; /*  this is way the line will span whole width of `code` component */
+  padding: 1.5rem 0;
+  background-color: #1e293b;
+  border-radius: 0.5rem;
+}
+
+/* line highlight */
+span[data-highlighted-line] {
+  @apply bg-zinc-100/30 border-l-4 ml-[-15px] pl-[11px] mr-[-14px] pr-[14px] inline-block border-amber-400 min-w-full;
+}
+
+/* line numbers */
+code[data-line-numbers] > [data-line]::before {
+  counter-increment: line;
+  content: counter(line);
+
+  /* Other styling */
+  display: inline-block;
+  width: 0.75rem;
+  margin-right: 2rem;
+  text-align: right;
+  color: gray;
+}
+
+code[data-line-numbers-max-digits="2"] > [data-line]::before {
+  width: 1.25rem;
+}
+
+code[data-line-numbers-max-digits="3"] > [data-line]::before {
+  width: 1.75rem;
+}
+
+code[data-line-numbers-max-digits="4"] > [data-line]::before {
+  width: 2.25rem;
+}
+
+/* title */
+figcaption[data-rehype-pretty-code-title] {
+  margin: 0 !important;
+  display: inline-flex;
+  position: relative;  
+  top: 3.5px;
+  background: #1e293b;
+  color: theme("colors.zinc.100");
+  font-family: theme("fontFamily.mono");
+  padding: 0.25rem 1.5rem;
+  border-radius: 0.5rem 0.5rem 0 0;
+  border-top: 4px solid theme("colors.indigo.600");
+  font-size: 0.8rem;
+}
