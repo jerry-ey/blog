@@ -1,0 +1,64 @@
+---
+title: "Localstack"
+description: "A comprehensive guide to Localstack and how to use it for local cloud development and testing."
+published: 2024-09-20
+---
+
+# Localstack: A Guide to Local Cloud Development
+
+Localstack is a powerful tool that allows you to develop and test cloud applications locally by
+emulating various cloud services. It provides a fully functional local cloud environment that mimics the capabilities of popular cloud providers like AWS, Azure, and Google Cloud Platform. In this guide, we'll explore how you can use Localstack to streamline your development workflow and test cloud applications without incurring cloud costs.
+
+## Installation
+
+Let's focus on MacOS.
+Could find the installation instructions for other OSs [here](https://docs.localstack.cloud/docs/installation).
+
+Also starting from [here](https://app.localstack.cloud/getting-started)
+
+1. Install cli
+
+```bash
+brew install localstack/tap/localstack-cli
+```
+
+2. Personal auth token
+
+```bash
+export LOCALSTACK_AUTH_TOKEN="<token>"
+```
+
+3. Start Localstack
+
+```bash
+localstack start
+```
+
+4. Download LocalStack Desktop
+
+Download from [here](https://app.localstack.cloud/download)
+
+## AWS & Terraform
+
+1. Install AWS CLI & AWS Local
+
+(Don't need `pip` to install now, can use brew)
+
+```bash
+brew install awscli
+brew install awscli-local
+```
+
+2. Install Terraform & Terraform Local
+
+```bash
+brew install terraform
+brew install terraform-local
+```
+
+## Refs
+
+- [Localstack Docs](https://docs.localstack.cloud/)
+- [tflocal](https://docs.localstack.cloud/user-guide/integrations/terraform/)
+- [awslocal](https://docs.localstack.cloud/user-guide/integrations/awscli/)
+- [localstack-terraform-samples](https://github.com/localstack-samples/localstack-terraform-samples/)
