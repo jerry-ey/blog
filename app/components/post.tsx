@@ -1,20 +1,25 @@
 import { Link } from "@remix-run/react";
+import { Timer } from "lucide-react";
 
 import type { PostMeta } from "~/.server/posts";
 
 export const Post = ({ slug, frontmatter }: PostMeta) => {
   return (
-    <article className="space-y-2">
-      <Link to={`/posts/${slug}`}>
-        <h3 className="text-3xl font-bold">{frontmatter.title}</h3>
-      </Link>
-      <p className="text-gray-600 dark:text-gray-400">{frontmatter.description}</p>
-      <time
-        className="block text-sm text-cyan-700"
-        dateTime={frontmatter.published}
-      >
-        {frontmatter.published.replace(/-/g, "/")}
-      </time>
-    </article>
+    <Link className="no-underline" to={`/posts/${slug}`}>
+      <article className="border border-white rounded-md p-6 bg-slate-800">
+        <h3 className="text-3xl font-bold mt-0">{frontmatter.title}</h3>
+        <p className="text-gray-600 dark:text-gray-400">
+          {frontmatter.description}
+        </p>
+
+        <time
+          className="text-sm text-purple-500 flex gap-2 items-center"
+          dateTime={frontmatter.published}
+        >
+          <Timer />
+          {frontmatter.published.replace(/-/g, "/")}
+        </time>
+      </article>
+    </Link>
   );
 };

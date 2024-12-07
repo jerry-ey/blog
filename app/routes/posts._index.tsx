@@ -13,7 +13,7 @@ export default function Component() {
     <div>        
       <ul className="space-y-8">
         {posts.map((post) => (
-          <li key={post.slug}>
+          <li className="list-none" key={post.slug}>
             <Post {...post} />
           </li>
         ))}

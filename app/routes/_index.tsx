@@ -11,9 +11,13 @@ export default function Index() {
   return (
     <div className="flex items-center flex-col md:flex-row p-8">
       <main className="flex-1 flex-col flex gap-2">
-        <h1 className="max-w-2xl mb-4 text-4xl font-extrabold leading-none tracking-tight md:text-5xl xl:text-6xl dark:text-white">
-          Welcome to My Blog
-        </h1>
+        <section className="flex items-center">
+          <img src="/logo.png" alt="logo" className="w-14 sm:w-20 block" />
+          <h1 className="max-w-2xl text-3xl sm:text-4xl font-extrabold leading-none tracking-tight md:text-5xl xl:text-6xl dark:text-white">
+            Welcome to My Blog
+          </h1>
+        </section>
+
         <p className="max-w-2xl mb-6 font-light text-gray-500 lg:mb-8 md:text-lg lg:text-xl dark:text-gray-400">
           As a passionate full-stack developer, I specialize in modern web
           technologies with a strong focus on{" "}
@@ -32,10 +36,7 @@ export default function Index() {
           insights, tips, and experiences in both development and operations,
           blending code and infrastructure to build robust applications.
         </p>
-      </main>
-      <aside className="flex-1">
-        <img src="/logo.png" alt="logo" />
-      </aside>
+      </main>     
     </div>
   );
 }

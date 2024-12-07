@@ -49,3 +49,8 @@ figcaption[data-rehype-pretty-code-title] {
   border-top: 4px solid theme("colors.indigo.600");
   font-size: 0.8rem;
 }
+
+/* override */
+h2 {
+  color: #FFE100 !important;
+}

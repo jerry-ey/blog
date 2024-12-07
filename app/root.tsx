@@ -25,10 +25,10 @@ const Wrapper = (props: { children: ReactNode }) => (
 );
 
 export const meta: MetaFunction = () => [
-  { title: "Remix Blog" },
+  { title: "Jerry Blog" },
   {
     name: "description",
-    content: "Jerry Wang's Remix blog",
+    content: "Jerry Wang's blog built by Remix",
   },
 ];
 
